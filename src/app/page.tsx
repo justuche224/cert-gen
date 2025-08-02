@@ -204,13 +204,10 @@ export default function CertMasterPage() {
     if (!logoRef.current) return;
     e.preventDefault();
     setIsDragging(true);
-    // Calculate the offset from the cursor to the center of the logo
     const logoRect = logoRef.current.getBoundingClientRect();
-    const logoCenterX = logoRect.left + logoRect.width / 2;
-    const logoCenterY = logoRect.top + logoRect.height / 2;
     setDragStart({
-      x: e.clientX - logoCenterX,
-      y: e.clientY - logoCenterY
+      x: e.clientX - logoRect.left,
+      y: e.clientY - logoRect.top,
     });
   };
 
@@ -219,17 +216,17 @@ export default function CertMasterPage() {
     e.preventDefault();
     const certRect = certificateRef.current.getBoundingClientRect();
     
-    // Calculate the new center of the logo based on cursor position and initial offset
-    const newLogoCenterX = e.clientX - dragStart.x;
-    const newLogoCenterY = e.clientY - dragStart.y;
+    let newX = ((e.clientX - certRect.left - dragStart.x) / certRect.width) * 100;
+    let newY = ((e.clientY - certRect.top - dragStart.y) / certRect.height) * 100;
 
-    // Convert the absolute pixel coordinates to percentage-based coordinates relative to the certificate container
-    let newX = ((newLogoCenterX - certRect.left) / certRect.width) * 100;
-    let newY = ((newLogoCenterY - certRect.top) / certRect.height) * 100;
-
-    // Clamp values to keep the logo's center within the certificate boundaries
-    newX = Math.max(0, Math.min(100, newX));
-    newY = Math.max(0, Math.min(100, newY));
+    const logoRect = logoRef.current?.getBoundingClientRect();
+    if(logoRect) {
+      const logoWidthPercent = (logoRect.width / certRect.width) * 100;
+      const logoHeightPercent = (logoRect.height / certRect.height) * 100;
+      
+      newX = Math.max(logoWidthPercent / 2, Math.min(100 - logoWidthPercent / 2, newX + logoWidthPercent / 2));
+      newY = Math.max(logoHeightPercent / 2, Math.min(100 - logoHeightPercent / 2, newY + logoHeightPercent / 2));
+    }
 
     form.setValue("logoPosition", { x: newX, y: newY });
   };
@@ -238,20 +235,6 @@ export default function CertMasterPage() {
     setIsDragging(false);
   };
   
-  useEffect(() => {
-    const previewContainer = certificateRef.current?.parentElement;
-    if (isDragging) {
-      previewContainer?.addEventListener('mousemove', handleMouseMove as any);
-      previewContainer?.addEventListener('mouseup', handleMouseUp);
-      previewContainer?.addEventListener('mouseleave', handleMouseUp);
-    }
-    return () => {
-      previewContainer?.removeEventListener('mousemove', handleMouseMove as any);
-      previewContainer?.removeEventListener('mouseup', handleMouseUp);
-      previewContainer?.removeEventListener('mouseleave', handleMouseUp);
-    };
-  }, [isDragging, dragStart]);
-
 
   const handleSingleDownload = async () => {
     if (!certificateRef.current) return;
@@ -705,16 +688,18 @@ export default function CertMasterPage() {
           </ScrollArea>
         </div>
 
-        <div className="lg:col-span-2 xl:col-span-1 bg-background flex items-center justify-center p-4 md:p-8 relative overflow-hidden">
+        <div 
+            className="lg:col-span-2 xl:col-span-1 bg-background flex items-center justify-center p-4 md:p-8 relative overflow-hidden"
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+        >
           <div
             ref={certificateRef}
             className={cn(
               "transform scale-[0.35] sm:scale-[0.5] md:scale-[0.6] lg:scale-[0.5] xl:scale-[0.7] 2xl:scale-[0.8] origin-center shadow-2xl rounded-lg bg-white transition-all duration-300 relative",
                selectedAspectRatio.className
             )}
-             onMouseMove={handleMouseMove}
-             onMouseUp={handleMouseUp}
-             onMouseLeave={handleMouseUp}
           >
             {SelectedTemplateComponent && <SelectedTemplateComponent {...watchedData} />}
             {watchedData.logoUrl && (
