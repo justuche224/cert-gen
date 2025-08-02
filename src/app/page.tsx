@@ -48,7 +48,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Award, Bot, Download, Save, Upload, X, Zap, Loader2 } from "lucide-react";
+import { Award, Bot, Download, Save, Upload, X, Loader2, Zap } from "lucide-react";
 import Image from "next/image";
 
 import { certificateImprovementFeedback } from "@/ai/flows/certificate-improvement-feedback";
@@ -236,7 +236,7 @@ export default function CertMasterPage() {
       previewContainer?.removeEventListener('mouseup', handleMouseUp);
       previewContainer?.removeEventListener('mouseleave', handleMouseUp);
     };
-  }, [isDragging, dragStart, handleMouseMove, handleMouseUp]);
+  }, [isDragging, dragStart]);
 
 
   const handleSingleDownload = async () => {
@@ -385,11 +385,12 @@ export default function CertMasterPage() {
                     <button
                       key={template.id}
                       onClick={() => setSelectedTemplateId(template.id)}
-                      className={`rounded-lg border-2 overflow-hidden transition-all duration-200 ${
+                      className={cn(
+                        "rounded-lg border-2 overflow-hidden transition-all duration-200",
                         selectedTemplateId === template.id
                           ? "border-primary ring-2 ring-primary ring-offset-2"
                           : "border-transparent hover:border-primary"
-                      }`}
+                      )}
                     >
                       <Image
                         src={template.preview}

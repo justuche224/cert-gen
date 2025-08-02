@@ -4,6 +4,8 @@ import { TemplateClassic } from "@/components/templates/classic";
 import { TemplateFormal } from "@/components/templates/formal";
 import { TemplatePlayful } from "@/components/templates/playful";
 import { TemplateElegant } from "@/components/templates/elegant";
+import { TemplateMinimalist } from "@/components/templates/minimalist";
+import { TemplateCorporate } from "@/components/templates/corporate";
 
 export const templates: TemplateInfo[] = [
   {
@@ -22,6 +24,14 @@ export const templates: TemplateInfo[] = [
     aiHint: "classic certificate",
     component: TemplateClassic,
   },
+    {
+    id: "elegant",
+    name: "Elegant",
+    description: "A sophisticated and elegant certificate design, perfect for prestigious awards.",
+    preview: "https://placehold.co/300x210.png",
+    aiHint: "elegant certificate",
+    component: TemplateElegant,
+  },
   {
     id: "formal",
     name: "Formal",
@@ -30,6 +40,22 @@ export const templates: TemplateInfo[] = [
     aiHint: "formal certificate",
     component: TemplateFormal,
   },
+    {
+    id: "minimalist",
+    name: "Minimalist",
+    description: "A clean, simple design emphasizing typography and white space.",
+    preview: "https://placehold.co/300x210.png",
+    aiHint: "minimalist certificate",
+    component: TemplateMinimalist,
+  },
+   {
+    id: "corporate",
+    name: "Corporate",
+    description: "A professional design suitable for business or official certifications.",
+    preview: "https://placehold.co/300x210.png",
+    aiHint: "corporate certificate",
+    component: TemplateCorporate,
+  },
   {
     id: "playful",
     name: "Playful",
@@ -37,13 +63,5 @@ export const templates: TemplateInfo[] = [
     preview: "https://placehold.co/300x210.png",
     aiHint: "playful certificate",
     component: TemplatePlayful,
-  },
-    {
-    id: "elegant",
-    name: "Elegant",
-    description: "A sophisticated and elegant certificate design, perfect for prestigious awards.",
-    preview: "https://placehold.co/300x210.png",
-    aiHint: "elegant certificate",
-    component: TemplateElegant,
   },
 ];
