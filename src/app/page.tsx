@@ -126,7 +126,7 @@ export default function CertMasterPage() {
       secondaryColor: "#eab308",
       aspectRatio: "a4-landscape",
       logoUrl: null,
-      logoPosition: "top-right",
+      logoPosition: "middle-center",
       logoScale: 15,
       logoOpacity: 1,
     },
