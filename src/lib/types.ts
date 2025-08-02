@@ -11,6 +11,8 @@ export interface CertificateData {
   primaryColor: string;
   secondaryColor: string;
   aspectRatio: string;
+  logoUrl: string | null;
+  logoPosition: { x: number; y: number };
 }
 
 export type TemplateComponent = ComponentType<CertificateData>;

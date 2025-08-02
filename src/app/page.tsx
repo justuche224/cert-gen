@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useMemo } from "react";
+import React, { useState, useRef, useMemo, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -22,6 +22,7 @@ import {
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -47,7 +48,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Award, Bot, Download, FileText, Loader2, Upload, X, Zap } from "lucide-react";
+import { Award, Bot, Download, FileText, Image as ImageIcon, Loader2, Upload, X, Zap } from "lucide-react";
 import Image from "next/image";
 
 import { certificateImprovementFeedback } from "@/ai/flows/certificate-improvement-feedback";
@@ -66,6 +67,8 @@ const formSchema = z.object({
   primaryColor: z.string().regex(/^#[0-9a-f]{6}$/i, "Must be a valid hex color."),
   secondaryColor: z.string().regex(/^#[0-9a-f]{6}$/i, "Must be a valid hex color."),
   aspectRatio: z.string().min(1, "Aspect ratio is required."),
+  logoUrl: z.string().nullable(),
+  logoPosition: z.object({ x: z.number(), y: z.number() }),
 });
 
 const aspectRatios: { [key: string]: { name: string, className: string, pdfOptions: { w: number, h: number} } } = {
@@ -82,9 +85,13 @@ export default function CertMasterPage() {
   const [isGettingFeedback, setIsGettingFeedback] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [feedbackError, setFeedbackError] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
   const certificateRef = useRef<HTMLDivElement>(null);
+  const logoRef = useRef<HTMLImageElement>(null);
   const csvInputRef = useRef<HTMLInputElement>(null);
+  const logoInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -100,6 +107,8 @@ export default function CertMasterPage() {
       primaryColor: "#0284c7",
       secondaryColor: "#eab308",
       aspectRatio: "a4-landscape",
+      logoUrl: null,
+      logoPosition: { x: 50, y: 50 },
     },
   });
 
@@ -110,11 +119,66 @@ export default function CertMasterPage() {
     return templates.find((t) => t.id === selectedTemplateId)?.component as TemplateComponent | undefined;
   }, [selectedTemplateId]);
 
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        form.setValue("logoUrl", reader.result as string);
+        form.setValue("logoPosition", { x: 50, y: 50 }); // Reset position on new logo
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleMouseDown = (e: React.MouseEvent<HTMLImageElement>) => {
+    if (!logoRef.current || !certificateRef.current) return;
+    e.preventDefault();
+    setIsDragging(true);
+    const certRect = certificateRef.current.getBoundingClientRect();
+    setDragStart({
+      x: e.clientX - certRect.left - watchedData.logoPosition.x * certRect.width / 100,
+      y: e.clientY - certRect.top - watchedData.logoPosition.y * certRect.height / 100
+    });
+  };
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isDragging || !certificateRef.current) return;
+    const certRect = certificateRef.current.getBoundingClientRect();
+    let newX = ((e.clientX - certRect.left - dragStart.x) / certRect.width) * 100;
+    let newY = ((e.clientY - certRect.top - dragStart.y) / certRect.height) * 100;
+
+    // Clamp values between 0 and 100
+    newX = Math.max(0, Math.min(100, newX));
+    newY = Math.max(0, Math.min(100, newY));
+
+    form.setValue("logoPosition", { x: newX, y: newY });
+  };
+  
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+  
+  useEffect(() => {
+    const previewContainer = certificateRef.current?.parentElement;
+    if (isDragging) {
+      previewContainer?.addEventListener('mousemove', handleMouseMove as any);
+      previewContainer?.addEventListener('mouseup', handleMouseUp);
+      previewContainer?.addEventListener('mouseleave', handleMouseUp);
+    }
+    return () => {
+      previewContainer?.removeEventListener('mousemove', handleMouseMove as any);
+      previewContainer?.removeEventListener('mouseup', handleMouseUp);
+      previewContainer?.removeEventListener('mouseleave', handleMouseUp);
+    };
+  }, [isDragging, dragStart, handleMouseMove, handleMouseUp]);
+
+
   const handleSingleDownload = async () => {
     if (!certificateRef.current) return;
     setIsGeneratingPdf(true);
     try {
-      const canvas = await html2canvas(certificateRef.current, { scale: 3, backgroundColor: null });
+      const canvas = await html2canvas(certificateRef.current, { scale: 3, backgroundColor: null, useCORS: true });
       const imgData = canvas.toDataURL("image/png");
       const pdf = new jsPDF({ 
         orientation: selectedAspectRatio.pdfOptions.w > selectedAspectRatio.pdfOptions.h ? "landscape" : "portrait", 
@@ -140,7 +204,7 @@ export default function CertMasterPage() {
     if (!file) return;
 
     setIsGeneratingZip(true);
-    Papa.parse<Omit<CertificateData, 'textColor' | 'fontFamily' | 'primaryColor' | 'secondaryColor'>>(file, {
+    Papa.parse<Omit<CertificateData, 'textColor' | 'fontFamily' | 'primaryColor' | 'secondaryColor' | 'logoUrl' | 'logoPosition'>>(file, {
       header: true,
       skipEmptyLines: true,
       complete: async (results) => {
@@ -167,7 +231,7 @@ export default function CertMasterPage() {
                 const staticCert = React.createElement(SelectedTemplateComponent, tempFormValues);
                 tempDiv.innerHTML = renderToStaticMarkup(staticCert);
                 
-                const canvas = await html2canvas(tempDiv, { scale: 2, backgroundColor: null });
+                const canvas = await html2canvas(tempDiv, { scale: 2, backgroundColor: null, useCORS: true });
                 const pdf = new jsPDF({ 
                   orientation: w > h ? "landscape" : "portrait", 
                   unit: "px", 
@@ -351,6 +415,39 @@ export default function CertMasterPage() {
                      <h3 className="text-lg font-medium pt-4">Design</h3>
                      <FormField
                         control={form.control}
+                        name="logoUrl"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Logo</FormLabel>
+                            <FormControl>
+                              <div className="flex items-center gap-4">
+                                <Button type="button" variant="outline" onClick={() => logoInputRef.current?.click()}>
+                                  <ImageIcon className="mr-2"/>
+                                  Upload Logo
+                                </Button>
+                                <input
+                                  type="file"
+                                  ref={logoInputRef}
+                                  onChange={handleLogoUpload}
+                                  accept="image/*"
+                                  className="hidden"
+                                />
+                                {field.value && (
+                                   <Button type="button" variant="ghost" size="icon" onClick={() => form.setValue('logoUrl', null)}>
+                                      <X className="h-4 w-4" />
+                                   </Button>
+                                )}
+                              </div>
+                            </FormControl>
+                             <FormDescription>
+                                {field.value ? "Click and drag the logo on the preview to position it." : "Upload a logo for your certificate."}
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                     <FormField
+                        control={form.control}
                         name="aspectRatio"
                         render={({ field }) => (
                           <FormItem>
@@ -501,11 +598,27 @@ export default function CertMasterPage() {
           <div
             ref={certificateRef}
             className={cn(
-              "transform scale-[0.35] sm:scale-[0.5] md:scale-[0.6] lg:scale-[0.5] xl:scale-[0.7] 2xl:scale-[0.8] origin-center shadow-2xl rounded-lg bg-white transition-all duration-300",
+              "transform scale-[0.35] sm:scale-[0.5] md:scale-[0.6] lg:scale-[0.5] xl:scale-[0.7] 2xl:scale-[0.8] origin-center shadow-2xl rounded-lg bg-white transition-all duration-300 relative",
                selectedAspectRatio.className
             )}
+             onMouseMove={handleMouseMove}
+             onMouseUp={handleMouseUp}
+             onMouseLeave={handleMouseUp}
           >
             {SelectedTemplateComponent && <SelectedTemplateComponent {...watchedData} />}
+            {watchedData.logoUrl && (
+              <img
+                ref={logoRef}
+                src={watchedData.logoUrl}
+                alt="Uploaded Logo"
+                onMouseDown={handleMouseDown}
+                className="absolute max-w-[15%] max-h-[15%] cursor-move"
+                style={{
+                  left: `calc(${watchedData.logoPosition.x}% - ${logoRef.current?.offsetWidth ? logoRef.current.offsetWidth / 2 : 0}px)`,
+                  top: `calc(${watchedData.logoPosition.y}% - ${logoRef.current?.offsetHeight ? logoRef.current.offsetHeight / 2 : 0}px)`,
+                }}
+              />
+            )}
           </div>
         </div>
       </main>

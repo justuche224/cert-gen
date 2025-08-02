@@ -17,17 +17,17 @@ export function TemplatePlayful({
       className="w-full h-full bg-white p-8 flex flex-col relative overflow-hidden border-4 border-dashed"
       style={{ fontFamily, borderColor: primaryColor, borderRadius: '20px' }}
     >
-      <div className="absolute top-10 left-10 text-yellow-400">
+      <div className="absolute top-10 left-10 text-yellow-400 z-10">
         <Sun className="w-16 h-16" style={{ color: secondaryColor }} />
       </div>
-      <div className="absolute bottom-10 right-10 text-yellow-400">
+      <div className="absolute bottom-10 right-10 text-yellow-400 z-10">
         <Star className="w-16 h-16" fill={secondaryColor} style={{ color: secondaryColor }}/>
       </div>
-       <div className="absolute top-1/2 left-1/4 text-pink-400 opacity-50">
+       <div className="absolute top-1/2 left-1/4 text-pink-400 opacity-50 z-10">
          <Smile className="w-24 h-24 transform -rotate-12" style={{ color: secondaryColor }} />
       </div>
 
-      <div className="relative z-10 flex-grow flex flex-col justify-center items-center text-center space-y-4">
+      <div className="relative z-20 flex-grow flex flex-col justify-center items-center text-center space-y-4">
         <h2
           className="text-5xl font-bold"
           style={{ color: primaryColor }}

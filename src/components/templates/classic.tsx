@@ -22,7 +22,7 @@ export function TemplateClassic({
       <div className="absolute bottom-2 left-2 w-16 h-16 border-b-4 border-l-4" style={{ borderColor: secondaryColor }}></div>
       <div className="absolute bottom-2 right-2 w-16 h-16 border-b-4 border-r-4" style={{ borderColor: secondaryColor }}></div>
       
-      <div className="flex-grow flex flex-col justify-center items-center text-center">
+      <div className="flex-grow flex flex-col justify-center items-center text-center z-10">
         <h2
           className="text-4xl"
           style={{ color: textColor, fontFamily: 'Georgia, serif' }}
@@ -63,7 +63,7 @@ export function TemplateClassic({
             </div>
         </div>
       </div>
-       <div className="absolute bottom-8 right-8">
+       <div className="absolute bottom-8 right-8 z-10">
          <svg className="w-24 h-24" style={{ color: primaryColor }} viewBox="0 0 100 100">
           <circle cx="50" cy="50" r="45" fill={secondaryColor + '33'} strokeWidth="2" stroke="currentColor" />
           <circle cx="50" cy="50" r="38" fill="transparent" strokeWidth="1" stroke="currentColor" />
