@@ -55,6 +55,7 @@ import { certificateImprovementFeedback } from "@/ai/flows/certificate-improveme
 import { type CertificateData, type TemplateComponent } from "@/lib/types";
 import { templates } from "@/lib/templates";
 import { cn } from "@/lib/utils";
+import { Slider } from "@/components/ui/slider";
 
 const formSchema = z.object({
   certificateTitle: z.string().min(1, "Certificate title is required."),
@@ -69,10 +70,11 @@ const formSchema = z.object({
   aspectRatio: z.string().min(1, "Aspect ratio is required."),
   logoUrl: z.string().nullable(),
   logoPosition: z.object({ x: z.number(), y: z.number() }),
+  logoOpacity: z.number().min(0).max(1),
 });
 
 type FormSchemaType = z.infer<typeof formSchema>;
-type DesignSettings = Pick<FormSchemaType, 'textColor' | 'fontFamily' | 'primaryColor' | 'secondaryColor' | 'aspectRatio' | 'logoUrl' | 'logoPosition'>;
+type DesignSettings = Pick<FormSchemaType, 'textColor' | 'fontFamily' | 'primaryColor' | 'secondaryColor' | 'aspectRatio' | 'logoUrl' | 'logoPosition' | 'logoOpacity'>;
 
 
 const aspectRatios: { [key: string]: { name: string, className: string, pdfOptions: { w: number, h: number} } } = {
@@ -115,6 +117,7 @@ export default function CertMasterPage() {
       aspectRatio: "a4-landscape",
       logoUrl: null,
       logoPosition: { x: 50, y: 50 },
+      logoOpacity: 1,
     },
   });
 
@@ -125,7 +128,7 @@ export default function CertMasterPage() {
         const parsedSettings: DesignSettings = JSON.parse(savedSettings);
         
         // Validate before setting values
-        const designKeys: (keyof DesignSettings)[] = ['textColor', 'fontFamily', 'primaryColor', 'secondaryColor', 'aspectRatio', 'logoUrl', 'logoPosition'];
+        const designKeys: (keyof DesignSettings)[] = ['textColor', 'fontFamily', 'primaryColor', 'secondaryColor', 'aspectRatio', 'logoUrl', 'logoPosition', 'logoOpacity'];
         
         designKeys.forEach(key => {
             if (parsedSettings[key] !== undefined) {
@@ -167,6 +170,7 @@ export default function CertMasterPage() {
             aspectRatio: currentValues.aspectRatio,
             logoUrl: currentValues.logoUrl,
             logoPosition: currentValues.logoPosition,
+            logoOpacity: currentValues.logoOpacity,
         };
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(designSettings));
         toast({
@@ -270,7 +274,7 @@ export default function CertMasterPage() {
     if (!file) return;
 
     setIsGeneratingZip(true);
-    Papa.parse<Omit<CertificateData, 'textColor' | 'fontFamily' | 'primaryColor' | 'secondaryColor' | 'logoUrl' | 'logoPosition'>>(file, {
+    Papa.parse<Omit<CertificateData, 'textColor' | 'fontFamily' | 'primaryColor' | 'secondaryColor' | 'logoUrl' | 'logoPosition' | 'logoOpacity'>>(file, {
       header: true,
       skipEmptyLines: true,
       complete: async (results) => {
@@ -513,6 +517,32 @@ export default function CertMasterPage() {
                           </FormItem>
                         )}
                       />
+                      {watchedData.logoUrl && (
+                        <FormField
+                          control={form.control}
+                          name="logoOpacity"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Logo Opacity</FormLabel>
+                              <FormControl>
+                                <div className="flex items-center gap-4">
+                                  <Slider
+                                    defaultValue={[field.value]}
+                                    max={1}
+                                    step={0.05}
+                                    onValueChange={(value) => field.onChange(value[0])}
+                                    className="flex-1"
+                                  />
+                                  <span className="text-sm text-muted-foreground w-12 text-right">
+                                    {(field.value * 100).toFixed(0)}%
+                                  </span>
+                                </div>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      )}
                      <FormField
                         control={form.control}
                         name="aspectRatio"
@@ -687,6 +717,7 @@ export default function CertMasterPage() {
                 style={{
                   left: `calc(${watchedData.logoPosition.x}% - ${logoRef.current?.offsetWidth ? logoRef.current.offsetWidth / 2 : 0}px)`,
                   top: `calc(${watchedData.logoPosition.y}% - ${logoRef.current?.offsetHeight ? logoRef.current.offsetHeight / 2 : 0}px)`,
+                  opacity: watchedData.logoOpacity,
                 }}
               />
             )}

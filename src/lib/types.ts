@@ -13,6 +13,7 @@ export interface CertificateData {
   aspectRatio: string;
   logoUrl: string | null;
   logoPosition: { x: number; y: number };
+  logoOpacity: number;
 }
 
 export type TemplateComponent = ComponentType<CertificateData>;
@@ -25,5 +26,3 @@ export interface TemplateInfo {
   aiHint: string;
   component: TemplateComponent;
 }
-
-    
