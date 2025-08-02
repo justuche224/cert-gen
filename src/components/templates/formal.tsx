@@ -8,19 +8,21 @@ export function TemplateFormal({
   date,
   textColor,
   fontFamily,
+  primaryColor,
+  secondaryColor,
 }: CertificateData) {
   return (
     <div
-      className="w-full h-full bg-white p-10 flex border-2 border-gray-800"
-      style={{ fontFamily }}
+      className="w-full h-full bg-white p-10 flex border-2"
+      style={{ fontFamily, borderColor: primaryColor }}
     >
-      <div className="w-1/4 h-full bg-gray-800 flex flex-col justify-between items-center p-6">
+      <div className="w-1/4 h-full flex flex-col justify-between items-center p-6" style={{ backgroundColor: primaryColor }}>
         <div className="text-center">
-            <h3 className="text-white text-3xl font-bold tracking-wider" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}>
+            <h3 className="text-3xl font-bold tracking-wider" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed', color: secondaryColor }}>
                 CERTIFICATE
             </h3>
         </div>
-        <CheckCircle className="w-16 h-16 text-white" />
+        <CheckCircle className="w-16 h-16" style={{ color: secondaryColor }} />
       </div>
 
       <div className="w-3/4 h-full pl-10 flex flex-col justify-center">
@@ -33,7 +35,7 @@ export function TemplateFormal({
         <p className="text-lg mt-8" style={{ color: textColor }}>
           Has been awarded this certificate for the successful completion of
         </p>
-        <h2 className="text-4xl font-semibold mt-2 text-gray-800">
+        <h2 className="text-4xl font-semibold mt-2" style={{color: primaryColor}}>
           {courseName}
         </h2>
         
@@ -48,11 +50,11 @@ export function TemplateFormal({
           </div>
         </div>
          <div className="absolute bottom-12 right-12">
-            <svg className="w-28 h-28 text-gray-800" viewBox="0 0 100 100">
+            <svg className="w-28 h-28" style={{ color: primaryColor }} viewBox="0 0 100 100">
                 <path d="M50,5A45,45,0,1,1,5,50,45,45,0,0,1,50,5M50,0a50,50,0,1,0,50,50A50,50,0,0,0,50,0Z" fill="currentColor"/>
-                <text x="50" y="45" textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">CM</text>
-                <text x="50" y="60" textAnchor="middle" fill="white" fontSize="10">CERTIFIED</text>
-                <text x="50" y="72" textAnchor="middle" fill="white" fontSize="10">QUALITY</text>
+                <text x="50" y="45" textAnchor="middle" style={{ fill: secondaryColor }} fontSize="12" fontWeight="bold">CM</text>
+                <text x="50" y="60" textAnchor="middle" style={{ fill: secondaryColor }} fontSize="10">CERTIFIED</text>
+                <text x="50" y="72" textAnchor="middle" style={{ fill: secondaryColor }} fontSize="10">QUALITY</text>
             </svg>
         </div>
       </div>

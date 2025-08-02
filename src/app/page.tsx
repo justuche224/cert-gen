@@ -61,6 +61,8 @@ const formSchema = z.object({
   date: z.string().min(1, "Date is required."),
   textColor: z.string().regex(/^#[0-9a-f]{6}$/i, "Must be a valid hex color."),
   fontFamily: z.string().min(1, "Font is required."),
+  primaryColor: z.string().regex(/^#[0-9a-f]{6}$/i, "Must be a valid hex color."),
+  secondaryColor: z.string().regex(/^#[0-9a-f]{6}$/i, "Must be a valid hex color."),
 });
 
 export default function CertMasterPage() {
@@ -84,6 +86,8 @@ export default function CertMasterPage() {
       date: format(new Date(), "yyyy-MM-dd"),
       textColor: "#1f2937",
       fontFamily: "Inter",
+      primaryColor: "#0284c7",
+      secondaryColor: "#eab308",
     },
   });
 
@@ -119,7 +123,7 @@ export default function CertMasterPage() {
     if (!file) return;
 
     setIsGeneratingZip(true);
-    Papa.parse<Omit<CertificateData, 'textColor' | 'fontFamily'>>(file, {
+    Papa.parse<Omit<CertificateData, 'textColor' | 'fontFamily' | 'primaryColor' | 'secondaryColor'>>(file, {
       header: true,
       skipEmptyLines: true,
       complete: async (results) => {
@@ -309,6 +313,7 @@ export default function CertMasterPage() {
                         )}
                       />
                     </div>
+                     <h3 className="text-lg font-medium pt-4">Design</h3>
                     <div className="grid grid-cols-2 gap-4">
                       <FormField
                         control={form.control}
@@ -326,7 +331,7 @@ export default function CertMasterPage() {
                           </FormItem>
                         )}
                       />
-                      <FormField
+                       <FormField
                         control={form.control}
                         name="fontFamily"
                         render={({ field }) => (
@@ -345,6 +350,40 @@ export default function CertMasterPage() {
                                 <SelectItem value="Arial">Arial</SelectItem>
                               </SelectContent>
                             </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="primaryColor"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Primary Color</FormLabel>
+                             <FormControl>
+                                <div className="relative">
+                                    <Input {...field} className="pr-10"/>
+                                    <Input type="color" value={field.value} onChange={field.onChange} className="absolute top-0 right-0 h-full w-8 p-1 appearance-none bg-transparent border-none cursor-pointer"/>
+                                </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="secondaryColor"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Secondary Color</FormLabel>
+                             <FormControl>
+                                <div className="relative">
+                                    <Input {...field} className="pr-10"/>
+                                    <Input type="color" value={field.value} onChange={field.onChange} className="absolute top-0 right-0 h-full w-8 p-1 appearance-none bg-transparent border-none cursor-pointer"/>
+                                </div>
+                            </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}

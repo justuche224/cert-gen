@@ -7,6 +7,8 @@ export interface CertificateData {
   date: string;
   textColor: string;
   fontFamily: string;
+  primaryColor: string;
+  secondaryColor: string;
 }
 
 export type TemplateComponent = ComponentType<CertificateData>;

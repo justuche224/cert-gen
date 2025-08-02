@@ -7,17 +7,19 @@ export function TemplateClassic({
   date,
   textColor,
   fontFamily,
+  primaryColor,
+  secondaryColor,
 }: CertificateData) {
   return (
     <div
-      className="w-full h-full bg-white p-8 flex flex-col relative border-8 border-amber-800"
-      style={{ fontFamily }}
+      className="w-full h-full bg-white p-8 flex flex-col relative border-8"
+      style={{ fontFamily, borderColor: primaryColor }}
     >
       {/* Ornate corners */}
-      <div className="absolute top-2 left-2 w-16 h-16 border-t-4 border-l-4 border-amber-600"></div>
-      <div className="absolute top-2 right-2 w-16 h-16 border-t-4 border-r-4 border-amber-600"></div>
-      <div className="absolute bottom-2 left-2 w-16 h-16 border-b-4 border-l-4 border-amber-600"></div>
-      <div className="absolute bottom-2 right-2 w-16 h-16 border-b-4 border-r-4 border-amber-600"></div>
+      <div className="absolute top-2 left-2 w-16 h-16 border-t-4 border-l-4" style={{ borderColor: secondaryColor }}></div>
+      <div className="absolute top-2 right-2 w-16 h-16 border-t-4 border-r-4" style={{ borderColor: secondaryColor }}></div>
+      <div className="absolute bottom-2 left-2 w-16 h-16 border-b-4 border-l-4" style={{ borderColor: secondaryColor }}></div>
+      <div className="absolute bottom-2 right-2 w-16 h-16 border-b-4 border-r-4" style={{ borderColor: secondaryColor }}></div>
       
       <div className="flex-grow flex flex-col justify-center items-center text-center">
         <h2
@@ -27,7 +29,7 @@ export function TemplateClassic({
           Certificate of Achievement
         </h2>
         
-        <div className="w-1/4 h-0.5 bg-amber-700 my-6"></div>
+        <div className="w-1/4 h-0.5 my-6" style={{ backgroundColor: primaryColor }}></div>
 
         <p className="text-xl" style={{ color: textColor }}>
           This is to certify that
@@ -43,7 +45,7 @@ export function TemplateClassic({
         <p className="text-xl max-w-xl" style={{ color: textColor }}>
           has successfully completed the requirements for the
         </p>
-        <h3 className="text-3xl font-semibold mt-4 text-amber-800">
+        <h3 className="text-3xl font-semibold mt-4" style={{ color: primaryColor }}>
           {courseName}
         </h3>
 
@@ -61,8 +63,8 @@ export function TemplateClassic({
         </div>
       </div>
        <div className="absolute bottom-8 right-8">
-         <svg className="w-24 h-24 text-amber-800/80" viewBox="0 0 100 100">
-          <circle cx="50" cy="50" r="45" fill="#fef3c7" strokeWidth="2" stroke="currentColor" />
+         <svg className="w-24 h-24" style={{ color: primaryColor }} viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="45" fill={secondaryColor + '33'} strokeWidth="2" stroke="currentColor" />
           <circle cx="50" cy="50" r="38" fill="transparent" strokeWidth="1" stroke="currentColor" />
           <text x="50" y="55" textAnchor="middle" fontSize="10" fill="currentColor" fontWeight="bold">OFFICIAL</text>
           <text x="50" y="68" textAnchor="middle" fontSize="10" fill="currentColor" fontWeight="bold">SEAL</text>
