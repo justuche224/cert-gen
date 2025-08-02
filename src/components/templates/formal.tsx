@@ -10,6 +10,7 @@ export function TemplateFormal({
   fontFamily,
   primaryColor,
   secondaryColor,
+  certificateTitle,
 }: CertificateData) {
   return (
     <div
@@ -27,7 +28,7 @@ export function TemplateFormal({
 
       <div className="w-3/4 h-full pl-10 flex flex-col justify-center">
         <p className="text-xl uppercase tracking-widest" style={{ color: textColor }}>
-          Official Recognition
+          {certificateTitle}
         </p>
         <h1 className="text-6xl font-bold mt-4" style={{ color: textColor }}>
           {recipientName}

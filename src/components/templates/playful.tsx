@@ -10,6 +10,7 @@ export function TemplatePlayful({
   fontFamily,
   primaryColor,
   secondaryColor,
+  certificateTitle,
 }: CertificateData) {
   return (
     <div
@@ -31,7 +32,7 @@ export function TemplatePlayful({
           className="text-5xl font-bold"
           style={{ color: primaryColor }}
         >
-          Awesome Job!
+          {certificateTitle}
         </h2>
 
         <p className="text-xl" style={{ color: textColor }}>

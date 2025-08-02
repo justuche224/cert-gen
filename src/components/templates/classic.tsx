@@ -9,6 +9,7 @@ export function TemplateClassic({
   fontFamily,
   primaryColor,
   secondaryColor,
+  certificateTitle,
 }: CertificateData) {
   return (
     <div
@@ -26,7 +27,7 @@ export function TemplateClassic({
           className="text-4xl"
           style={{ color: textColor, fontFamily: 'Georgia, serif' }}
         >
-          Certificate of Achievement
+          {certificateTitle}
         </h2>
         
         <div className="w-1/4 h-0.5 my-6" style={{ backgroundColor: primaryColor }}></div>

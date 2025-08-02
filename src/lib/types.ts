@@ -1,6 +1,7 @@
 import type { ComponentType } from "react";
 
 export interface CertificateData {
+  certificateTitle: string;
   recipientName: string;
   courseName: string;
   issuerName: string;

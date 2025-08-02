@@ -10,6 +10,7 @@ export function TemplateElegant({
   fontFamily,
   primaryColor,
   secondaryColor,
+  certificateTitle,
 }: CertificateData) {
   return (
     <div
@@ -25,7 +26,7 @@ export function TemplateElegant({
           className="text-lg uppercase tracking-[0.2em]"
           style={{ color: textColor }}
         >
-          Certificate of Distinction
+          {certificateTitle}
         </p>
         
         <div className="my-6">

@@ -15,7 +15,7 @@ import {z} from 'genkit';
 const CertificateImprovementFeedbackInputSchema = z.object({
   certificateText: z
     .string()
-    .describe('The customized text content of the certificate.'),
+    .describe('The customized text content of the certificate, including title, recipient, course, issuer, and date.'),
   templateStyle: z
     .string()
     .describe('A description of the certificate template style (colors, fonts, etc.).'),

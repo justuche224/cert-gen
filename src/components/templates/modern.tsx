@@ -21,6 +21,7 @@ export function TemplateModern({
   fontFamily,
   primaryColor,
   secondaryColor,
+  certificateTitle,
 }: CertificateData) {
   const primaryRgb = hexToRgb(primaryColor);
   const secondaryRgb = hexToRgb(secondaryColor);
@@ -38,7 +39,7 @@ export function TemplateModern({
           className="text-2xl font-light uppercase tracking-widest"
           style={{ color: textColor }}
         >
-          Certificate of Completion
+          {certificateTitle}
         </h2>
         
         <p className="mt-6 text-lg" style={{ color: textColor }}>

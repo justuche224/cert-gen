@@ -56,6 +56,7 @@ import { templates } from "@/lib/templates";
 import { cn } from "@/lib/utils";
 
 const formSchema = z.object({
+  certificateTitle: z.string().min(1, "Certificate title is required."),
   recipientName: z.string().min(1, "Recipient name is required."),
   courseName: z.string().min(1, "Course or achievement is required."),
   issuerName: z.string().min(1, "Issuer name is required."),
@@ -89,6 +90,7 @@ export default function CertMasterPage() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      certificateTitle: "Certificate of Completion",
       recipientName: "Jane Doe",
       courseName: "Mastering Next.js",
       issuerName: "CertMaster Academy",
@@ -221,7 +223,7 @@ export default function CertMasterPage() {
       const currentValues = form.getValues();
       const templateStyle = templates.find(t => t.id === selectedTemplateId)?.description || 'default';
       const result = await certificateImprovementFeedback({
-        certificateText: `Recipient: ${currentValues.recipientName}, Course: ${currentValues.courseName}, Issuer: ${currentValues.issuerName}, Date: ${currentValues.date}`,
+        certificateText: `Title: ${currentValues.certificateTitle}, Recipient: ${currentValues.recipientName}, Course: ${currentValues.courseName}, Issuer: ${currentValues.issuerName}, Date: ${currentValues.date}`,
         templateStyle: templateStyle,
       });
       setFeedback(result.feedback);
@@ -279,6 +281,19 @@ export default function CertMasterPage() {
                 <h2 className="text-xl font-semibold mb-4">2. Customize Content</h2>
                 <Form {...form}>
                   <form className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="certificateTitle"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Certificate Title</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                     <FormField
                       control={form.control}
                       name="recipientName"
