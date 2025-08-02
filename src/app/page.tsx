@@ -53,6 +53,7 @@ import Image from "next/image";
 import { certificateImprovementFeedback } from "@/ai/flows/certificate-improvement-feedback";
 import { type CertificateData, type TemplateComponent } from "@/lib/types";
 import { templates } from "@/lib/templates";
+import { cn } from "@/lib/utils";
 
 const formSchema = z.object({
   recipientName: z.string().min(1, "Recipient name is required."),
@@ -63,7 +64,15 @@ const formSchema = z.object({
   fontFamily: z.string().min(1, "Font is required."),
   primaryColor: z.string().regex(/^#[0-9a-f]{6}$/i, "Must be a valid hex color."),
   secondaryColor: z.string().regex(/^#[0-9a-f]{6}$/i, "Must be a valid hex color."),
+  aspectRatio: z.string().min(1, "Aspect ratio is required."),
 });
+
+const aspectRatios: { [key: string]: { name: string, className: string, pdfOptions: { w: number, h: number} } } = {
+  'landscape': { name: 'Landscape (16:9)', className: 'w-[1000px] h-[563px]', pdfOptions: { w: 1000, h: 563 } },
+  'portrait': { name: 'Portrait (9:16)', className: 'w-[563px] h-[1000px]', pdfOptions: { w: 563, h: 1000 } },
+  'square': { name: 'Square (1:1)', className: 'w-[800px] h-[800px]', pdfOptions: { w: 800, h: 800 } },
+  'a4-landscape': { name: 'A4 Landscape', className: 'w-[1000px] h-[707px]', pdfOptions: { w: 1000, h: 707 } },
+};
 
 export default function CertMasterPage() {
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>(templates[0].id);
@@ -88,10 +97,12 @@ export default function CertMasterPage() {
       fontFamily: "Inter",
       primaryColor: "#0284c7",
       secondaryColor: "#eab308",
+      aspectRatio: "a4-landscape",
     },
   });
 
   const watchedData = form.watch();
+  const selectedAspectRatio = aspectRatios[watchedData.aspectRatio] || aspectRatios['a4-landscape'];
 
   const SelectedTemplateComponent = useMemo(() => {
     return templates.find((t) => t.id === selectedTemplateId)?.component as TemplateComponent | undefined;
@@ -103,8 +114,12 @@ export default function CertMasterPage() {
     try {
       const canvas = await html2canvas(certificateRef.current, { scale: 3, backgroundColor: null });
       const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF({ orientation: "landscape", unit: "px", format: [canvas.width, canvas.height] });
-      pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height);
+      const pdf = new jsPDF({ 
+        orientation: selectedAspectRatio.pdfOptions.w > selectedAspectRatio.pdfOptions.h ? "landscape" : "portrait", 
+        unit: "px", 
+        format: [selectedAspectRatio.pdfOptions.w, selectedAspectRatio.pdfOptions.h] 
+      });
+      pdf.addImage(imgData, "PNG", 0, 0, selectedAspectRatio.pdfOptions.w, selectedAspectRatio.pdfOptions.h);
       pdf.save(`${watchedData.recipientName.replace(/ /g, "_")}_certificate.pdf`);
     } catch (error) {
       console.error(error);
@@ -138,8 +153,9 @@ export default function CertMasterPage() {
             const tempDiv = document.createElement('div');
             tempDiv.style.position = 'absolute';
             tempDiv.style.left = '-9999px';
-            tempDiv.style.width = '1000px';
-            tempDiv.style.height = '700px';
+            const { w, h } = selectedAspectRatio.pdfOptions;
+            tempDiv.style.width = `${w}px`;
+            tempDiv.style.height = `${h}px`;
             document.body.appendChild(tempDiv);
             
             const { renderToStaticMarkup } = await import('react-dom/server');
@@ -150,8 +166,12 @@ export default function CertMasterPage() {
                 tempDiv.innerHTML = renderToStaticMarkup(staticCert);
                 
                 const canvas = await html2canvas(tempDiv, { scale: 2, backgroundColor: null });
-                const pdf = new jsPDF({ orientation: "landscape", unit: "px", format: [canvas.width, canvas.height] });
-                pdf.addImage(canvas.toDataURL("image/png"), "PNG", 0, 0, canvas.width, canvas.height);
+                const pdf = new jsPDF({ 
+                  orientation: w > h ? "landscape" : "portrait", 
+                  unit: "px", 
+                  format: [w, h] 
+                });
+                pdf.addImage(canvas.toDataURL("image/png"), "PNG", 0, 0, w, h);
                 const pdfBlob = pdf.output('blob');
                 zip.file(`${row.recipientName.replace(/ /g, "_")}.pdf`, pdfBlob);
 
@@ -314,6 +334,28 @@ export default function CertMasterPage() {
                       />
                     </div>
                      <h3 className="text-lg font-medium pt-4">Design</h3>
+                     <FormField
+                        control={form.control}
+                        name="aspectRatio"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Aspect Ratio</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select an aspect ratio" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {Object.entries(aspectRatios).map(([key, value]) => (
+                                  <SelectItem key={key} value={key}>{value.name}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                     <div className="grid grid-cols-2 gap-4">
                       <FormField
                         control={form.control}
@@ -443,7 +485,10 @@ export default function CertMasterPage() {
         <div className="lg:col-span-2 xl:col-span-1 bg-background flex items-center justify-center p-4 md:p-8 relative overflow-hidden">
           <div
             ref={certificateRef}
-            className="w-[1000px] h-[707px] transform scale-[0.35] sm:scale-[0.5] md:scale-[0.6] lg:scale-[0.5] xl:scale-[0.7] 2xl:scale-[0.8] origin-center shadow-2xl rounded-lg bg-white transition-all duration-300"
+            className={cn(
+              "transform scale-[0.35] sm:scale-[0.5] md:scale-[0.6] lg:scale-[0.5] xl:scale-[0.7] 2xl:scale-[0.8] origin-center shadow-2xl rounded-lg bg-white transition-all duration-300",
+               selectedAspectRatio.className
+            )}
           >
             {SelectedTemplateComponent && <SelectedTemplateComponent {...watchedData} />}
           </div>
@@ -469,3 +514,5 @@ export default function CertMasterPage() {
     </div>
   );
 }
+
+    

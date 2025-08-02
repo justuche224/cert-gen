@@ -9,6 +9,7 @@ export interface CertificateData {
   fontFamily: string;
   primaryColor: string;
   secondaryColor: string;
+  aspectRatio: string;
 }
 
 export type TemplateComponent = ComponentType<CertificateData>;
@@ -21,3 +22,5 @@ export interface TemplateInfo {
   aiHint: string;
   component: TemplateComponent;
 }
+
+    
