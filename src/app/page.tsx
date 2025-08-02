@@ -201,23 +201,33 @@ export default function CertMasterPage() {
   };
 
   const handleMouseDown = (e: React.MouseEvent<HTMLImageElement>) => {
-    if (!logoRef.current || !certificateRef.current) return;
+    if (!logoRef.current) return;
     e.preventDefault();
     setIsDragging(true);
-    const certRect = certificateRef.current.getBoundingClientRect();
+    // Calculate the offset from the cursor to the center of the logo
+    const logoRect = logoRef.current.getBoundingClientRect();
+    const logoCenterX = logoRect.left + logoRect.width / 2;
+    const logoCenterY = logoRect.top + logoRect.height / 2;
     setDragStart({
-      x: e.clientX - certRect.left - watchedData.logoPosition.x * certRect.width / 100,
-      y: e.clientY - certRect.top - watchedData.logoPosition.y * certRect.height / 100
+      x: e.clientX - logoCenterX,
+      y: e.clientY - logoCenterY
     });
   };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!isDragging || !certificateRef.current) return;
+    e.preventDefault();
     const certRect = certificateRef.current.getBoundingClientRect();
-    let newX = ((e.clientX - certRect.left - dragStart.x) / certRect.width) * 100;
-    let newY = ((e.clientY - certRect.top - dragStart.y) / certRect.height) * 100;
+    
+    // Calculate the new center of the logo based on cursor position and initial offset
+    const newLogoCenterX = e.clientX - dragStart.x;
+    const newLogoCenterY = e.clientY - dragStart.y;
 
-    // Clamp values between 0 and 100
+    // Convert the absolute pixel coordinates to percentage-based coordinates relative to the certificate container
+    let newX = ((newLogoCenterX - certRect.left) / certRect.width) * 100;
+    let newY = ((newLogoCenterY - certRect.top) / certRect.height) * 100;
+
+    // Clamp values to keep the logo's center within the certificate boundaries
     newX = Math.max(0, Math.min(100, newX));
     newY = Math.max(0, Math.min(100, newY));
 
@@ -715,8 +725,9 @@ export default function CertMasterPage() {
                 onMouseDown={handleMouseDown}
                 className="absolute max-w-[15%] max-h-[15%] cursor-move"
                 style={{
-                  left: `calc(${watchedData.logoPosition.x}% - ${logoRef.current?.offsetWidth ? logoRef.current.offsetWidth / 2 : 0}px)`,
-                  top: `calc(${watchedData.logoPosition.y}% - ${logoRef.current?.offsetHeight ? logoRef.current.offsetHeight / 2 : 0}px)`,
+                  left: `${watchedData.logoPosition.x}%`,
+                  top: `${watchedData.logoPosition.y}%`,
+                  transform: 'translate(-50%, -50%)',
                   opacity: watchedData.logoOpacity,
                 }}
               />
