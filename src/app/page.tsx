@@ -48,7 +48,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Award, Bot, Download, Save, Upload, X, Loader2, Zap } from "lucide-react";
+import { Award, Bot, Download, Save, Upload, X, Loader2 } from "lucide-react";
 import Image from "next/image";
 
 import { certificateImprovementFeedback } from "@/ai/flows/certificate-improvement-feedback";
@@ -671,7 +671,7 @@ export default function CertMasterPage() {
                  <Card className="bg-primary/5 border-primary/20">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
-                            <Zap className="text-primary"/>
+                            <Bot className="text-primary"/>
                             AI Improvement Tool
                         </CardTitle>
                         <CardDescription>Get AI-powered feedback on your certificate's design and content.</CardDescription>
@@ -740,3 +740,5 @@ export default function CertMasterPage() {
     </div>
   );
 }
+
+    
