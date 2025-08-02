@@ -2,6 +2,8 @@ import { type TemplateInfo } from "@/lib/types";
 import { TemplateModern } from "@/components/templates/modern";
 import { TemplateClassic } from "@/components/templates/classic";
 import { TemplateFormal } from "@/components/templates/formal";
+import { TemplatePlayful } from "@/components/templates/playful";
+import { TemplateElegant } from "@/components/templates/elegant";
 
 export const templates: TemplateInfo[] = [
   {
@@ -27,5 +29,21 @@ export const templates: TemplateInfo[] = [
     preview: "https://placehold.co/300x210.png",
     aiHint: "formal certificate",
     component: TemplateFormal,
+  },
+  {
+    id: "playful",
+    name: "Playful",
+    description: "A fun and creative certificate design with playful icons and colors.",
+    preview: "https://placehold.co/300x210.png",
+    aiHint: "playful certificate",
+    component: TemplatePlayful,
+  },
+    {
+    id: "elegant",
+    name: "Elegant",
+    description: "A sophisticated and elegant certificate design, perfect for prestigious awards.",
+    preview: "https://placehold.co/300x210.png",
+    aiHint: "elegant certificate",
+    component: TemplateElegant,
   },
 ];
