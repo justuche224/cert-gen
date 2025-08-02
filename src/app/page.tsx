@@ -48,7 +48,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Award, Bot, Download, FileText, Image as ImageIcon, Loader2, Upload, X, Zap } from "lucide-react";
+import { Award, Bot, Download, Save, Upload, X, Zap, Loader2 } from "lucide-react";
 import Image from "next/image";
 
 import { certificateImprovementFeedback } from "@/ai/flows/certificate-improvement-feedback";
@@ -71,12 +71,18 @@ const formSchema = z.object({
   logoPosition: z.object({ x: z.number(), y: z.number() }),
 });
 
+type FormSchemaType = z.infer<typeof formSchema>;
+type DesignSettings = Pick<FormSchemaType, 'textColor' | 'fontFamily' | 'primaryColor' | 'secondaryColor' | 'aspectRatio' | 'logoUrl' | 'logoPosition'>;
+
+
 const aspectRatios: { [key: string]: { name: string, className: string, pdfOptions: { w: number, h: number} } } = {
   'landscape': { name: 'Landscape (16:9)', className: 'w-[1000px] h-[563px]', pdfOptions: { w: 1000, h: 563 } },
   'portrait': { name: 'Portrait (9:16)', className: 'w-[563px] h-[1000px]', pdfOptions: { w: 563, h: 1000 } },
   'square': { name: 'Square (1:1)', className: 'w-[800px] h-[800px]', pdfOptions: { w: 800, h: 800 } },
   'a4-landscape': { name: 'A4 Landscape', className: 'w-[1000px] h-[707px]', pdfOptions: { w: 1000, h: 707 } },
 };
+
+const LOCAL_STORAGE_KEY = "certmaster-design-settings";
 
 export default function CertMasterPage() {
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>(templates[0].id);
@@ -112,12 +118,71 @@ export default function CertMasterPage() {
     },
   });
 
+  useEffect(() => {
+    try {
+      const savedSettings = localStorage.getItem(LOCAL_STORAGE_KEY);
+      if (savedSettings) {
+        const parsedSettings: DesignSettings = JSON.parse(savedSettings);
+        
+        // Validate before setting values
+        const designKeys: (keyof DesignSettings)[] = ['textColor', 'fontFamily', 'primaryColor', 'secondaryColor', 'aspectRatio', 'logoUrl', 'logoPosition'];
+        
+        designKeys.forEach(key => {
+            if (parsedSettings[key] !== undefined) {
+                 form.setValue(key, parsedSettings[key] as any);
+            }
+        });
+        
+        toast({
+            title: "Design Loaded",
+            description: "Your previously saved design has been loaded.",
+        });
+      }
+    } catch (error) {
+        console.error("Failed to load design from local storage", error);
+        toast({
+            variant: "destructive",
+            title: "Load Error",
+            description: "Could not load your saved design.",
+        });
+    }
+  }, [form, toast]);
+
+
   const watchedData = form.watch();
   const selectedAspectRatio = aspectRatios[watchedData.aspectRatio] || aspectRatios['a4-landscape'];
 
   const SelectedTemplateComponent = useMemo(() => {
     return templates.find((t) => t.id === selectedTemplateId)?.component as TemplateComponent | undefined;
   }, [selectedTemplateId]);
+
+  const handleSaveDesign = () => {
+    try {
+        const currentValues = form.getValues();
+        const designSettings: DesignSettings = {
+            textColor: currentValues.textColor,
+            fontFamily: currentValues.fontFamily,
+            primaryColor: currentValues.primaryColor,
+            secondaryColor: currentValues.secondaryColor,
+            aspectRatio: currentValues.aspectRatio,
+            logoUrl: currentValues.logoUrl,
+            logoPosition: currentValues.logoPosition,
+        };
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(designSettings));
+        toast({
+            title: "Design Saved!",
+            description: "Your current design settings have been saved.",
+        });
+    } catch (error) {
+        console.error("Failed to save design to local storage", error);
+        toast({
+            variant: "destructive",
+            title: "Save Error",
+            description: "Could not save your design.",
+        });
+    }
+  };
+
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -187,6 +252,7 @@ export default function CertMasterPage() {
       });
       pdf.addImage(imgData, "PNG", 0, 0, selectedAspectRatio.pdfOptions.w, selectedAspectRatio.pdfOptions.h);
       pdf.save(`${watchedData.recipientName.replace(/ /g, "_")}_certificate.pdf`);
+      handleSaveDesign();
     } catch (error) {
       console.error(error);
       toast({
@@ -422,7 +488,7 @@ export default function CertMasterPage() {
                             <FormControl>
                               <div className="flex items-center gap-4">
                                 <Button type="button" variant="outline" onClick={() => logoInputRef.current?.click()}>
-                                  <ImageIcon className="mr-2"/>
+                                  <Upload className="mr-2"/>
                                   Upload Logo
                                 </Button>
                                 <input
@@ -551,24 +617,28 @@ export default function CertMasterPage() {
 
               <section className="space-y-4">
                 <h2 className="text-xl font-semibold">3. Generate & Download</h2>
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <Button onClick={handleSingleDownload} disabled={isGeneratingPdf || isGeneratingZip} className="w-full">
-                    {isGeneratingPdf ? <Loader2 className="animate-spin" /> : <Download />}
-                    Download PDF
-                  </Button>
-                  <Button onClick={() => csvInputRef.current?.click()} disabled={isGeneratingZip || isGeneratingPdf} variant="outline" className="w-full">
-                    {isGeneratingZip ? <Loader2 className="animate-spin" /> : <Upload />}
-                    Bulk from CSV
-                  </Button>
-                  <input
-                    type="file"
-                    ref={csvInputRef}
-                    onChange={handleBulkGenerate}
-                    accept=".csv"
-                    className="hidden"
-                  />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <Button onClick={handleSingleDownload} disabled={isGeneratingPdf || isGeneratingZip} className="w-full">
+                        {isGeneratingPdf ? <Loader2 className="animate-spin" /> : <Download />}
+                        Download PDF
+                    </Button>
+                    <Button onClick={() => csvInputRef.current?.click()} disabled={isGeneratingZip || isGeneratingPdf} variant="outline" className="w-full">
+                        {isGeneratingZip ? <Loader2 className="animate-spin" /> : <Upload />}
+                        Bulk from CSV
+                    </Button>
+                    <input
+                        type="file"
+                        ref={csvInputRef}
+                        onChange={handleBulkGenerate}
+                        accept=".csv"
+                        className="hidden"
+                    />
                 </div>
-                <p className="text-xs text-muted-foreground">For bulk generation, use a CSV with headers: `recipientName`, `courseName`, `issuerName`, `date`.</p>
+                 <Button onClick={handleSaveDesign} variant="secondary" className="w-full">
+                    <Save />
+                    Save Design
+                </Button>
+                <p className="text-xs text-muted-foreground">For bulk generation, use a CSV with headers: `recipientName`, `courseName`, `issuerName`, `date`. Your current design settings will be applied.</p>
               </section>
               
               <Separator />
