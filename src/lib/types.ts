@@ -12,7 +12,8 @@ export interface CertificateData {
   secondaryColor: string;
   aspectRatio: string;
   logoUrl: string | null;
-  logoPosition: { x: number; y: number };
+  logoPosition: string;
+  logoScale: number;
   logoOpacity: number;
 }
 

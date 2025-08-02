@@ -69,12 +69,13 @@ const formSchema = z.object({
   secondaryColor: z.string().regex(/^#[0-9a-f]{6}$/i, "Must be a valid hex color."),
   aspectRatio: z.string().min(1, "Aspect ratio is required."),
   logoUrl: z.string().nullable(),
-  logoPosition: z.object({ x: z.number(), y: z.number() }),
+  logoPosition: z.string().min(1, "Logo position is required."),
+  logoScale: z.number().min(5).max(50),
   logoOpacity: z.number().min(0).max(1),
 });
 
 type FormSchemaType = z.infer<typeof formSchema>;
-type DesignSettings = Pick<FormSchemaType, 'textColor' | 'fontFamily' | 'primaryColor' | 'secondaryColor' | 'aspectRatio' | 'logoUrl' | 'logoPosition' | 'logoOpacity'>;
+type DesignSettings = Pick<FormSchemaType, 'textColor' | 'fontFamily' | 'primaryColor' | 'secondaryColor' | 'aspectRatio' | 'logoUrl' | 'logoPosition' | 'logoScale' | 'logoOpacity'>;
 
 
 const aspectRatios: { [key: string]: { name: string, className: string, pdfOptions: { w: number, h: number} } } = {
@@ -82,6 +83,18 @@ const aspectRatios: { [key: string]: { name: string, className: string, pdfOptio
   'portrait': { name: 'Portrait (9:16)', className: 'w-[563px] h-[1000px]', pdfOptions: { w: 563, h: 1000 } },
   'square': { name: 'Square (1:1)', className: 'w-[800px] h-[800px]', pdfOptions: { w: 800, h: 800 } },
   'a4-landscape': { name: 'A4 Landscape', className: 'w-[1000px] h-[707px]', pdfOptions: { w: 1000, h: 707 } },
+};
+
+const logoPositions: { [key: string]: { name: string, style: React.CSSProperties } } = {
+  'top-left': { name: 'Top Left', style: { top: '5%', left: '5%', transform: 'translate(0, 0)' } },
+  'top-center': { name: 'Top Center', style: { top: '5%', left: '50%', transform: 'translate(-50%, 0)' } },
+  'top-right': { name: 'Top Right', style: { top: '5%', right: '5%', transform: 'translate(0, 0)' } },
+  'middle-left': { name: 'Middle Left', style: { top: '50%', left: '5%', transform: 'translate(0, -50%)' } },
+  'middle-center': { name: 'Middle Center', style: { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' } },
+  'middle-right': { name: 'Middle Right', style: { top: '50%', right: '5%', transform: 'translate(0, -50%)' } },
+  'bottom-left': { name: 'Bottom Left', style: { bottom: '5%', left: '5%', transform: 'translate(0, 0)' } },
+  'bottom-center': { name: 'Bottom Center', style: { bottom: '5%', left: '50%', transform: 'translate(-50%, 0)' } },
+  'bottom-right': { name: 'Bottom Right', style: { bottom: '5%', right: '5%', transform: 'translate(0, 0)' } },
 };
 
 const LOCAL_STORAGE_KEY = "certmaster-design-settings";
@@ -93,11 +106,8 @@ export default function CertMasterPage() {
   const [isGettingFeedback, setIsGettingFeedback] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [feedbackError, setFeedbackError] = useState<string | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
   const certificateRef = useRef<HTMLDivElement>(null);
-  const logoRef = useRef<HTMLImageElement>(null);
   const csvInputRef = useRef<HTMLInputElement>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
@@ -116,7 +126,8 @@ export default function CertMasterPage() {
       secondaryColor: "#eab308",
       aspectRatio: "a4-landscape",
       logoUrl: null,
-      logoPosition: { x: 50, y: 50 },
+      logoPosition: "top-right",
+      logoScale: 15,
       logoOpacity: 1,
     },
   });
@@ -128,7 +139,7 @@ export default function CertMasterPage() {
         const parsedSettings: DesignSettings = JSON.parse(savedSettings);
         
         // Validate before setting values
-        const designKeys: (keyof DesignSettings)[] = ['textColor', 'fontFamily', 'primaryColor', 'secondaryColor', 'aspectRatio', 'logoUrl', 'logoPosition', 'logoOpacity'];
+        const designKeys: (keyof DesignSettings)[] = ['textColor', 'fontFamily', 'primaryColor', 'secondaryColor', 'aspectRatio', 'logoUrl', 'logoPosition', 'logoScale', 'logoOpacity'];
         
         designKeys.forEach(key => {
             if (parsedSettings[key] !== undefined) {
@@ -170,6 +181,7 @@ export default function CertMasterPage() {
             aspectRatio: currentValues.aspectRatio,
             logoUrl: currentValues.logoUrl,
             logoPosition: currentValues.logoPosition,
+            logoScale: currentValues.logoScale,
             logoOpacity: currentValues.logoOpacity,
         };
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(designSettings));
@@ -194,45 +206,9 @@ export default function CertMasterPage() {
       const reader = new FileReader();
       reader.onloadend = () => {
         form.setValue("logoUrl", reader.result as string);
-        form.setValue("logoPosition", { x: 50, y: 50 }); // Reset position on new logo
       };
       reader.readAsDataURL(file);
     }
-  };
-
-  const handleMouseDown = (e: React.MouseEvent<HTMLImageElement>) => {
-    if (!logoRef.current) return;
-    e.preventDefault();
-    setIsDragging(true);
-    const logoRect = logoRef.current.getBoundingClientRect();
-    setDragStart({
-      x: e.clientX - logoRect.left,
-      y: e.clientY - logoRect.top,
-    });
-  };
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!isDragging || !certificateRef.current) return;
-    e.preventDefault();
-    const certRect = certificateRef.current.getBoundingClientRect();
-    
-    let newX = ((e.clientX - certRect.left - dragStart.x) / certRect.width) * 100;
-    let newY = ((e.clientY - certRect.top - dragStart.y) / certRect.height) * 100;
-
-    const logoRect = logoRef.current?.getBoundingClientRect();
-    if(logoRect) {
-      const logoWidthPercent = (logoRect.width / certRect.width) * 100;
-      const logoHeightPercent = (logoRect.height / certRect.height) * 100;
-      
-      newX = Math.max(logoWidthPercent / 2, Math.min(100 - logoWidthPercent / 2, newX + logoWidthPercent / 2));
-      newY = Math.max(logoHeightPercent / 2, Math.min(100 - logoHeightPercent / 2, newY + logoHeightPercent / 2));
-    }
-
-    form.setValue("logoPosition", { x: newX, y: newY });
-  };
-  
-  const handleMouseUp = () => {
-    setIsDragging(false);
   };
   
 
@@ -267,7 +243,7 @@ export default function CertMasterPage() {
     if (!file) return;
 
     setIsGeneratingZip(true);
-    Papa.parse<Omit<CertificateData, 'textColor' | 'fontFamily' | 'primaryColor' | 'secondaryColor' | 'logoUrl' | 'logoPosition' | 'logoOpacity'>>(file, {
+    Papa.parse<Omit<CertificateData, 'textColor' | 'fontFamily' | 'primaryColor' | 'secondaryColor' | 'logoUrl' | 'logoPosition' | 'logoScale' | 'logoOpacity'>>(file, {
       header: true,
       skipEmptyLines: true,
       complete: async (results) => {
@@ -504,37 +480,86 @@ export default function CertMasterPage() {
                               </div>
                             </FormControl>
                              <FormDescription>
-                                {field.value ? "Click and drag the logo on the preview to position it." : "Upload a logo for your certificate."}
+                                {field.value ? "Customize the logo position, scale, and opacity below." : "Upload a logo for your certificate."}
                             </FormDescription>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
                       {watchedData.logoUrl && (
-                        <FormField
-                          control={form.control}
-                          name="logoOpacity"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Logo Opacity</FormLabel>
-                              <FormControl>
-                                <div className="flex items-center gap-4">
-                                  <Slider
-                                    defaultValue={[field.value]}
-                                    max={1}
-                                    step={0.05}
-                                    onValueChange={(value) => field.onChange(value[0])}
-                                    className="flex-1"
-                                  />
-                                  <span className="text-sm text-muted-foreground w-12 text-right">
-                                    {(field.value * 100).toFixed(0)}%
-                                  </span>
-                                </div>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                        <>
+                          <FormField
+                            control={form.control}
+                            name="logoPosition"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Logo Position</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select a position" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {Object.entries(logoPositions).map(([key, value]) => (
+                                      <SelectItem key={key} value={key}>{value.name}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="logoScale"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Logo Scale</FormLabel>
+                                <FormControl>
+                                  <div className="flex items-center gap-4">
+                                    <Slider
+                                      defaultValue={[field.value]}
+                                      min={5}
+                                      max={50}
+                                      step={1}
+                                      onValueChange={(value) => field.onChange(value[0])}
+                                      className="flex-1"
+                                    />
+                                    <span className="text-sm text-muted-foreground w-12 text-right">
+                                      {field.value}%
+                                    </span>
+                                  </div>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="logoOpacity"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Logo Opacity</FormLabel>
+                                <FormControl>
+                                  <div className="flex items-center gap-4">
+                                    <Slider
+                                      defaultValue={[field.value]}
+                                      max={1}
+                                      step={0.05}
+                                      onValueChange={(value) => field.onChange(value[0])}
+                                      className="flex-1"
+                                    />
+                                    <span className="text-sm text-muted-foreground w-12 text-right">
+                                      {(field.value * 100).toFixed(0)}%
+                                    </span>
+                                  </div>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </>
                       )}
                      <FormField
                         control={form.control}
@@ -690,9 +715,6 @@ export default function CertMasterPage() {
 
         <div 
             className="lg:col-span-2 xl:col-span-1 bg-background flex items-center justify-center p-4 md:p-8 relative overflow-hidden"
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseUp}
         >
           <div
             ref={certificateRef}
@@ -704,15 +726,12 @@ export default function CertMasterPage() {
             {SelectedTemplateComponent && <SelectedTemplateComponent {...watchedData} />}
             {watchedData.logoUrl && (
               <img
-                ref={logoRef}
                 src={watchedData.logoUrl}
                 alt="Uploaded Logo"
-                onMouseDown={handleMouseDown}
-                className="absolute max-w-[15%] max-h-[15%] cursor-move"
+                className="absolute max-h-full max-w-full"
                 style={{
-                  left: `${watchedData.logoPosition.x}%`,
-                  top: `${watchedData.logoPosition.y}%`,
-                  transform: 'translate(-50%, -50%)',
+                  ...logoPositions[watchedData.logoPosition]?.style,
+                  width: `${watchedData.logoScale}%`,
                   opacity: watchedData.logoOpacity,
                 }}
               />
