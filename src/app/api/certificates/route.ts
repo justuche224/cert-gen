@@ -16,15 +16,16 @@ export async function POST(request: NextRequest) {
 
     const formData = await request.formData();
     const pdfFile = formData.get("pdf") as File;
+    const certificateId = formData.get("id") as string;
     const certificateTitle = formData.get("certificateTitle") as string;
     const recipientName = formData.get("recipientName") as string;
     const courseName = formData.get("courseName") as string;
     const issuer = formData.get("issuer") as string;
     const date = formData.get("date") as string;
 
-    if (!pdfFile) {
+    if (!pdfFile || !certificateId) {
       return NextResponse.json(
-        { error: "No PDF file provided" },
+        { error: "Missing required fields" },
         { status: 400 }
       );
     }
@@ -36,7 +37,6 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
-    const certificateId = crypto.randomUUID();
     const docLink = uploadResponse.data.url;
 
     const newCertificate = await db

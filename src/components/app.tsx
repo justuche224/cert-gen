@@ -9,6 +9,7 @@ import html2canvas from "html2canvas";
 import JSZip from "jszip";
 import Papa from "papaparse";
 import { format } from "date-fns";
+import QRCode from "qrcode.react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -59,6 +60,7 @@ import { Slider } from "@/components/ui/slider";
 import { uploadCertificateToServer } from "@/lib/upload-utils";
 
 const formSchema = z.object({
+  id: z.string().optional(),
   certificateTitle: z.string().min(1, "Certificate title is required."),
   recipientName: z.string().min(1, "Recipient name is required."),
   courseName: z.string().min(1, "Course or achievement is required."),
@@ -175,6 +177,7 @@ export default function CertMasterPage() {
   const [feedback, setFeedback] = useState<string | null>(null);
   const [feedbackError, setFeedbackError] = useState<string | null>(null);
   const [isUploadingToServer, setIsUploadingToServer] = useState(false);
+  const [verificationUrl, setVerificationUrl] = useState("");
 
   const certificateRef = useRef<HTMLDivElement>(null);
   const csvInputRef = useRef<HTMLInputElement>(null);
@@ -184,6 +187,7 @@ export default function CertMasterPage() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      id: crypto.randomUUID(),
       certificateTitle: "Certificate of Completion",
       recipientName: "Jane Doe",
       courseName: "Mastering Next.js",
@@ -240,6 +244,13 @@ export default function CertMasterPage() {
       });
     }
   }, [form, toast]);
+
+  useEffect(() => {
+    const id = form.watch("id");
+    const origin =
+      typeof window !== "undefined" ? window.location.origin : "";
+    setVerificationUrl(`${origin}/verify/${id}`);
+  }, [form.watch("id")]);
 
   const watchedData = form.watch();
   const selectedAspectRatio =
@@ -327,6 +338,7 @@ export default function CertMasterPage() {
 
       setIsUploadingToServer(true);
       const uploadResult = await uploadCertificateToServer(pdf, {
+        id: watchedData.id!,
         certificateTitle: watchedData.certificateTitle,
         recipientName: watchedData.recipientName,
         courseName: watchedData.courseName,
@@ -338,7 +350,7 @@ export default function CertMasterPage() {
         title: "Success!",
         description: `Certificate generated and saved. View it at: ${uploadResult.docLink}`,
       });
-
+      form.setValue("id", crypto.randomUUID());
       handleSaveDesign();
     } catch (error) {
       console.error(error);
@@ -971,6 +983,17 @@ export default function CertMasterPage() {
                   opacity: watchedData.logoOpacity,
                 }}
               />
+            )}
+            {verificationUrl && (
+              <div className="absolute bottom-4 right-4 z-50">
+                <QRCode
+                  value={verificationUrl}
+                  size={48}
+                  level="L"
+                  bgColor="#ffffff"
+                  fgColor="#000000"
+                />
+              </div>
             )}
           </div>
         </div>

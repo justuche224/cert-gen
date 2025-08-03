@@ -1,6 +1,7 @@
 import type { ComponentType } from "react";
 
 export interface CertificateData {
+  id?: string;
   certificateTitle: string;
   recipientName: string;
   courseName: string;
@@ -26,4 +27,17 @@ export interface TemplateInfo {
   preview: string;
   aiHint: string;
   component: TemplateComponent;
+}
+
+export interface Certificate {
+  id: string;
+  certificateTitle: string;
+  recipientName: string;
+  courseAchievement: string;
+  issuer: string;
+  date: Date;
+  docLink: string;
+  createdAt: Date;
+  updatedAt: Date;
+  userId: string;
 }

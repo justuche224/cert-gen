@@ -3,6 +3,7 @@ import jsPDF from "jspdf";
 export async function uploadCertificateToServer(
   pdfDoc: jsPDF,
   certificateData: {
+    id: string;
     certificateTitle: string;
     recipientName: string;
     courseName: string;
@@ -21,6 +22,7 @@ export async function uploadCertificateToServer(
 
     const formData = new FormData();
     formData.append("pdf", file);
+    formData.append("id", certificateData.id);
     formData.append("certificateTitle", certificateData.certificateTitle);
     formData.append("recipientName", certificateData.recipientName);
     formData.append("courseName", certificateData.courseName);
