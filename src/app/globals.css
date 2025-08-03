@@ -86,3 +86,103 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  @keyframes float-slow {
+    0%,
+    100% {
+      transform: translateY(0px) translateX(0px) rotate(0deg);
+    }
+    25% {
+      transform: translateY(-20px) translateX(10px) rotate(1deg);
+    }
+    50% {
+      transform: translateY(-10px) translateX(-10px) rotate(-1deg);
+    }
+    75% {
+      transform: translateY(-30px) translateX(5px) rotate(0.5deg);
+    }
+  }
+
+  @keyframes float-delayed {
+    0%,
+    100% {
+      transform: translateY(0px) translateX(0px) rotate(0deg);
+    }
+    33% {
+      transform: translateY(-15px) translateX(-15px) rotate(-1deg);
+    }
+    66% {
+      transform: translateY(-25px) translateX(10px) rotate(1deg);
+    }
+  }
+
+  @keyframes float-reverse {
+    0%,
+    100% {
+      transform: translateY(0px) translateX(0px) rotate(0deg);
+    }
+    25% {
+      transform: translateY(20px) translateX(-10px) rotate(-0.5deg);
+    }
+    50% {
+      transform: translateY(10px) translateX(10px) rotate(0.5deg);
+    }
+    75% {
+      transform: translateY(30px) translateX(-5px) rotate(-0.5deg);
+    }
+  }
+
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fade-in-right {
+    from {
+      opacity: 0;
+      transform: translateX(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  .animate-float-slow {
+    animation: float-slow 6s ease-in-out infinite;
+  }
+
+  .animate-float-delayed {
+    animation: float-delayed 8s ease-in-out infinite 2s;
+  }
+
+  .animate-float-reverse {
+    animation: float-reverse 7s ease-in-out infinite 1s;
+  }
+
+  .animate-fade-in-up {
+    animation: fade-in-up 0.8s ease-out forwards;
+  }
+
+  .animate-fade-in-right {
+    animation: fade-in-right 0.8s ease-out forwards 0.3s;
+    opacity: 0;
+  }
+
+  .animation-delay-200 {
+    animation-delay: 0.2s;
+    opacity: 0;
+  }
+
+  .animation-delay-400 {
+    animation-delay: 0.4s;
+    opacity: 0;
+  }
+}
