@@ -53,8 +53,12 @@ import { Award, Bot, Download, Save, Upload, X, Loader2 } from "lucide-react";
 import Image from "next/image";
 
 import { certificateImprovementFeedback } from "@/ai/flows/certificate-improvement-feedback";
-import { type CertificateData, type TemplateComponent } from "@/lib/types";
-import { templates } from "@/lib/templates";
+import {
+  type CertificateData,
+  type TemplateComponent,
+  type ExtendedTemplateInfo,
+} from "@/lib/types";
+import { builtInTemplates, getAllTemplates } from "@/lib/templates";
 import { cn } from "@/lib/utils";
 import { Slider } from "@/components/ui/slider";
 import { uploadCertificateToServer } from "@/lib/upload-utils";
@@ -168,8 +172,10 @@ const logoPositions: {
 const LOCAL_STORAGE_KEY = "certmaster-design-settings";
 
 export default function CertMasterPage() {
+  const [allTemplates, setAllTemplates] =
+    useState<ExtendedTemplateInfo[]>(builtInTemplates);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>(
-    templates[0].id
+    builtInTemplates[0].id
   );
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [isGeneratingZip, setIsGeneratingZip] = useState(false);
@@ -183,6 +189,18 @@ export default function CertMasterPage() {
   const csvInputRef = useRef<HTMLInputElement>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    const loadTemplates = async () => {
+      try {
+        const templates = await getAllTemplates();
+        setAllTemplates(templates);
+      } catch (error) {
+        console.error("Failed to load templates:", error);
+      }
+    };
+    loadTemplates();
+  }, []);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -247,8 +265,7 @@ export default function CertMasterPage() {
 
   useEffect(() => {
     const id = form.watch("id");
-    const origin =
-      typeof window !== "undefined" ? window.location.origin : "";
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
     setVerificationUrl(`${origin}/verify/${id}`);
   }, [form.watch("id")]);
 
@@ -257,10 +274,10 @@ export default function CertMasterPage() {
     aspectRatios[watchedData.aspectRatio] || aspectRatios["a4-landscape"];
 
   const SelectedTemplateComponent = useMemo(() => {
-    return templates.find((t) => t.id === selectedTemplateId)?.component as
+    return allTemplates.find((t) => t.id === selectedTemplateId)?.component as
       | TemplateComponent
       | undefined;
-  }, [selectedTemplateId]);
+  }, [selectedTemplateId, allTemplates]);
 
   const handleSaveDesign = () => {
     try {
@@ -478,7 +495,7 @@ export default function CertMasterPage() {
     try {
       const currentValues = form.getValues();
       const templateStyle =
-        templates.find((t) => t.id === selectedTemplateId)?.description ||
+        allTemplates.find((t) => t.id === selectedTemplateId)?.description ||
         "default";
       const result = await certificateImprovementFeedback({
         certificateText: `Title: ${currentValues.certificateTitle}, Recipient: ${currentValues.recipientName}, Course: ${currentValues.courseName}, Issuer: ${currentValues.issuerName}, Date: ${currentValues.date}`,
@@ -500,11 +517,22 @@ export default function CertMasterPage() {
           <ScrollArea className="h-[calc(100vh-4rem)]">
             <div className="p-6 space-y-8">
               <section>
-                <h2 className="text-xl font-semibold mb-4">
-                  1. Select a Template
-                </h2>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-semibold">
+                    1. Select a Template
+                  </h2>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      window.open("/dashboard/templates", "_blank")
+                    }
+                  >
+                    Manage Templates
+                  </Button>
+                </div>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {templates.map((template) => (
+                  {allTemplates.map((template) => (
                     <button
                       key={template.id}
                       onClick={() => setSelectedTemplateId(template.id)}
@@ -525,10 +553,17 @@ export default function CertMasterPage() {
                       />
                       <p className="text-xs p-1 bg-muted/50 truncate">
                         {template.name}
+                        {template.isCustom && (
+                          <span className="ml-1 text-blue-600">●</span>
+                        )}
                       </p>
                     </button>
                   ))}
                 </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  <span className="text-blue-600">●</span> indicates custom
+                  templates
+                </p>
               </section>
 
               <Separator />

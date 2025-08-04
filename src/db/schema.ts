@@ -76,8 +76,36 @@ export const certificate = pgTable("certificate", {
     .references(() => user.id, { onDelete: "cascade" }),
 });
 
+export const customTemplate = pgTable("custom_template", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description").default("").notNull(),
+  templateData: text("template_data").notNull(),
+  preview: text("preview"),
+  isPublic: boolean("is_public")
+    .$defaultFn(() => false)
+    .notNull(),
+  createdAt: timestamp("created_at")
+    .$defaultFn(() => new Date())
+    .notNull(),
+  updatedAt: timestamp("updated_at")
+    .$defaultFn(() => new Date())
+    .notNull(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+});
+
 export const userRelation = relations(user, ({ many }) => ({
   sessions: many(session),
   accounts: many(account),
   certificates: many(certificate),
+  customTemplates: many(customTemplate),
+}));
+
+export const customTemplateRelation = relations(customTemplate, ({ one }) => ({
+  user: one(user, {
+    fields: [customTemplate.userId],
+    references: [user.id],
+  }),
 }));
